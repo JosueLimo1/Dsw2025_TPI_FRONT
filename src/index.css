@@ -2,7 +2,8 @@
 
 @layer base {
   body {
-    @apply m-0 text-[2rem] h-[100dvh] sm:text-base bg-gray-100;
+    /* Ajustamos el tamaño de texto para que no sea gigante */
+    @apply m-0 h-[100dvh] bg-gray-100 text-base;
   }
   #root {
     @apply h-[100dvh];

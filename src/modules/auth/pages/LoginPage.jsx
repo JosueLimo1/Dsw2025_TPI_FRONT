@@ -1,18 +1,12 @@
+import React from 'react';
 import LoginForm from '../components/LoginForm';
 
-function LoginPage() {
+const LoginPage = () => {
   return (
-    <div className='
-      flex
-      flex-col
-      justify-center
-      h-[100dvh]
-      bg-neutral-100
-      sm:items-center
-    '>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
       <LoginForm />
     </div>
   );
-}
+};
 
 export default LoginPage;

@@ -1,37 +1,25 @@
 import axios from 'axios';
 
-const instance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
+// Ajusta el puerto si es necesario según tu Backend
+const BASE_URL = 'https://localhost:7138/api'; 
+
+const api = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-instance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error),
+// Interceptor: Agrega el token a cada petición si existe
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
-instance.interceptors.response.use(
-  (config) => { return config; },
-  (error) => {
-    if (error.status === 401) {
-      if (window.location.pathname.includes('/admin/')) {
-        localStorage.clear();
-        window.location.href = '/login';
-      } else {
-        localStorage.removeItem('token');
-      }
-    }
-
-    return Promise.reject(error);
-  },
-);
-
-export { instance };
+export default api;

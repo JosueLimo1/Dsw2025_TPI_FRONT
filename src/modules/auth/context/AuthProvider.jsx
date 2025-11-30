@@ -1,47 +1,33 @@
-import { createContext, useState } from 'react';
-import { login } from '../services/login';
+import { createContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Al cargar la app, revisamos si ya hay un token guardado
     const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, []);
 
-    return Boolean(token);
-  });
+  const loginSession = (token) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+  };
 
-  const singout = () => {
-    localStorage.clear();
+  const logoutSession = () => {
+    localStorage.removeItem('token');
     setIsAuthenticated(false);
   };
 
-  const singin = async (username, password) => {
-    const { data, error } = await login(username, password);
-
-    if (error) {
-      return { error };
-    }
-
-    localStorage.setItem('token', data);
-    setIsAuthenticated(true);
-
-    return { error: null };
-  };
-
   return (
-    <AuthContext.Provider
-      value={ {
-        isAuthenticated,
-        singin,
-        singout,
-      } }
-    >
-      {children}
+    <AuthContext.Provider value={{ isAuthenticated, loginSession, logoutSession, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
-
-export {
-  AuthProvider,
-  AuthContext,
 };
