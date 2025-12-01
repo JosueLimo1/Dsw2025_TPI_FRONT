@@ -1,24 +1,32 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom'; // Importamos useParams
 import Button from '../../shared/components/Button';
 import Card from '../../shared/components/Card';
 import Input from '../../shared/components/Input';
 import { createProduct } from '../services/create';
+// Importamos los servicios de edición
+import { getProductById, updateProduct } from '../services/update';
 
 function CreateProductForm() {
+  const { id } = useParams(); // Capturamos el ID de la URL
+  const isEditMode = !!id; // Si hay ID, estamos editando
+
   const {
     register,
     formState: { errors },
     handleSubmit,
+    setValue, // Necesario para rellenar los campos
+    reset
   } = useForm({
     defaultValues: {
       sku: '',
-      cui: '', // Esto irá a internalCode
+      cui: '',
       name: '',
       description: '',
       price: 0,
       stock: 0,
+      isActive: true // Por defecto activo al crear
     },
   });
 
@@ -26,20 +34,58 @@ function CreateProductForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // EFECTO: Si es modo edición, cargamos los datos
+  useEffect(() => {
+    if (isEditMode) {
+      const loadProduct = async () => {
+        try {
+          const product = await getProductById(id);
+          // Rellenamos el formulario (Mapeo de nombres Backend -> Formulario)
+          setValue('sku', product.sku);
+          setValue('cui', product.internalCode); 
+          setValue('name', product.name);
+          setValue('description', product.description);
+          setValue('price', product.currentUnitPrice);
+          setValue('stock', product.stockQuantity);
+          setValue('isActive', product.isActive); // Carga si está activo o no
+        } catch (error) {
+          console.error("Error cargando producto:", error);
+          alert("Error al cargar el producto. Puede que no exista.");
+          navigate('/admin/products');
+        }
+      };
+      loadProduct();
+    }
+  }, [id, isEditMode, setValue, navigate]);
+
   const onValid = async (formData) => {
     try {
       setIsSubmitting(true);
       setErrorBackendMessage('');
       
-      await createProduct(formData);
+      const payload = {
+        sku: formData.sku,
+        internalCode: formData.cui,
+        name: formData.name,
+        description: formData.description,
+        currentUnitPrice: Number(formData.price),
+        stockQuantity: Number(formData.stock),
+        isActive: formData.isActive // Enviamos el estado del checkbox
+      };
 
-      // Si todo sale bien, volvemos a la lista
+      if (isEditMode) {
+        // ACTUALIZAR
+        await updateProduct(id, payload);
+      } else {
+        // CREAR (Forzamos activo al crear, o usamos el del form)
+        await createProduct(payload);
+      }
+
       navigate('/admin/products');
     } catch (error) {
       console.error(error);
-      // Manejo de errores genérico por si no tienes el helper 'frontendErrorMessage'
-      const msg = error.response?.data?.message || error.response?.data || 'Error al crear el producto.';
-      setErrorBackendMessage(typeof msg === 'string' ? msg : 'Error desconocido en el servidor.');
+      const msg = error.response?.data?.message || error.response?.data || 'Error en el servidor.';
+      setErrorBackendMessage(typeof msg === 'string' ? msg : 'Error desconocido.');
     } finally {
       setIsSubmitting(false);
     }
@@ -47,14 +93,19 @@ function CreateProductForm() {
 
   return (
     <Card>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Crear Nuevo Producto</h2>
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">
+            {isEditMode ? 'Editar Producto' : 'Crear Nuevo Producto'}
+        </h2>
+        {isEditMode && (
+            <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                Editando
+            </span>
+        )}
       </div>
 
-      <form
-        className='flex flex-col gap-4'
-        onSubmit={handleSubmit(onValid)}
-      >
+      <form className='flex flex-col gap-4' onSubmit={handleSubmit(onValid)}>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label='SKU'
@@ -64,14 +115,14 @@ function CreateProductForm() {
             <Input
               label='Código Único (CUI)'
               error={errors.cui?.message}
-              {...register('cui', { required: 'Código Único es requerido' })}
+              {...register('cui', { required: 'Requerido' })}
             />
         </div>
 
         <Input
           label='Nombre'
           error={errors.name?.message}
-          {...register('name', { required: 'Nombre es requerido' })}
+          {...register('name', { required: 'Requerido' })}
         />
         
         <Input
@@ -84,20 +135,27 @@ function CreateProductForm() {
               label='Precio ($)'
               error={errors.price?.message}
               type='number'
-              {...register('price', {
-                required: 'Requerido',
-                min: { value: 0, message: 'No puede ser negativo' },
-              })}
+              {...register('price', { required: 'Requerido', min: 0 })}
             />
             <Input
               label='Stock'
               error={errors.stock?.message}
               type='number'
-              {...register('stock', {
-                required: 'Requerido',
-                min: { value: 0, message: 'No puede ser negativo' },
-              })}
+              {...register('stock', { required: 'Requerido', min: 0 })}
             />
+        </div>
+
+        {/* CHECKBOX PARA ACTIVAR/DESACTIVAR (Requerimiento Soft Delete) */}
+        <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
+            <input 
+                type="checkbox" 
+                id="isActive"
+                {...register("isActive")} 
+                className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer"
+            />
+            <label htmlFor="isActive" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Producto Habilitado (Visible para ventas)
+            </label>
         </div>
 
         {errorBackendMessage && (
@@ -115,7 +173,7 @@ function CreateProductForm() {
             Cancelar
           </Button>
           <Button type='submit' disabled={isSubmitting}>
-            {isSubmitting ? 'Guardando...' : 'Crear Producto'}
+            {isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Crear')}
           </Button>
         </div>
       </form>

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import Card from '../../shared/components/Card';
 import { getProducts } from '../services/list';
-// 1. IMPORTAMOS EL SERVICIO DE BORRAR
 import { deleteProduct } from '../services/delete';
 
 const productStatus = {
@@ -57,13 +56,11 @@ function ListProductsPage() {
     fetchProducts();
   }, [status, pageSize, pageNumber]);
 
-  // 2. FUNCIÓN PARA ELIMINAR
   const handleDelete = async (id, name) => {
     if (window.confirm(`¿Estás seguro de eliminar el producto "${name}"?`)) {
         try {
-            setLoading(true); // Mostramos loading mientras borra
+            setLoading(true);
             await deleteProduct(id);
-            // Recargamos la lista
             await fetchProducts();
         } catch (error) {
             console.error(error);
@@ -129,10 +126,8 @@ function ListProductsPage() {
             products?.length > 0 ? (
                 products.map(product => (
                 <Card key={product.sku || product.id}>
-                    {/* 3. DISEÑO ACTUALIZADO DE LA FILA */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         
-                        {/* Datos del producto */}
                         <div>
                             <h1 className="font-bold text-xl">{product.name} <span className="text-sm text-gray-500 font-normal">({product.sku})</span></h1>
                             <p className='text-base mt-1'>
@@ -144,11 +139,15 @@ function ListProductsPage() {
                             </p>
                         </div>
 
-                        {/* Botones de Acción */}
                         <div className="flex gap-2 w-full sm:w-auto">
-                            <Button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm w-full sm:w-auto">
+                            {/* --- BOTÓN EDITAR CONECTADO --- */}
+                            <Button 
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm w-full sm:w-auto"
+                                onClick={() => navigate(`/admin/products/edit/${product.id}`)}
+                            >
                                 ✏️ Editar
                             </Button>
+                            
                             <Button 
                                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm w-full sm:w-auto"
                                 onClick={() => handleDelete(product.id, product.name)}
