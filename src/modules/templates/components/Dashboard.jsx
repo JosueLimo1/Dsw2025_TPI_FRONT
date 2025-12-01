@@ -1,126 +1,93 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+// CORRECCIÓN: Quitamos el "modules" que sobraba porque ya estás adentro
 import useAuth from '../../auth/hook/useAuth';
-import Button from '../../shared/components/Button';
 
-function Dashboard() {
-  const [openMenu, setOpenMenu] = useState(false);
-
+const Dashboard = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { logoutSession } = useAuth();
   const navigate = useNavigate();
 
-  const { singout } = useAuth();
-
-  const logout = () => {
-    singout();
+  const handleLogout = () => {
+    logoutSession();
     navigate('/login');
   };
 
-  const getLinkStyles = ({ isActive }) => (
-    `
-      pl-4 w-full block  pt-4 pb-4 rounded-4xl transition hover:bg-gray-100
-      ${isActive
-      ? 'bg-purple-200 hover:bg-purple-100 '
-      : ''
-    }
-    `
-  );
-
-  const renderLogoutButton = (mobile = false) => (
-    <Button className={`${mobile ? 'block w-full sm:hidden' :  'hidden sm:block' }`} onClick={logout}>Cerrar sesión</Button>
-  );
+  const linkStyles = ({ isActive }) =>
+    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 font-medium ${
+      isActive 
+        ? 'bg-purple-100 text-purple-700' 
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+    }`;
 
   return (
-    <div
-      className="
-        h-full
-        grid
-        grid-cols-1
-        grid-rows-[auto_1fr]
-
-        sm:gap-3
-        sm:grid-cols-[256px_1fr]
-      "
-    >
-      <header
-        className="
-          flex
-          items-center
-          justify-between
-          p-4
-          shadow
-          rounded
-          bg-white
-
-          sm:col-span-2
-        "
+    <div className="flex h-screen bg-gray-50 font-sans">
+      
+      {/* === SIDEBAR === */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out 
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:relative sm:translate-x-0`}
       >
-        <span>Mi Dashboard</span>
-        {renderLogoutButton()}
-        <button
-          className="
-            bg-transparent
-            border-none
-            shadow-none
+        <div className="h-full flex flex-col justify-between">
+          <div>
+            <div className="h-16 flex items-center justify-center border-b bg-purple-600 text-white">
+              <h1 className="text-xl font-bold tracking-wider">PANEL ADMIN</h1>
+            </div>
 
-            sm:hidden
-          "
-          onClick={() => setOpenMenu(!openMenu)}
-        >{ openMenu ? <span>&#215;</span> : <span>&#9776;</span>}</button>
-      </header>
-      <aside
-        className={`
-          absolute
-          top-0
-          bottom-0
-          bg-white
-          w-64
-          p-6
-          ${openMenu ? 'left-0' : 'left-[-256px]'}
-          rounded
-          shadow
-          flex
-          flex-col
-          justify-between
+            <nav className="flex-1 px-4 py-6 space-y-2">
+              {/* Enlace al Home */}
+              <NavLink to="/admin" end className={linkStyles}>
+                <span>🏠</span> Principal
+              </NavLink>
+              
+              {/* Enlace a tus Productos */}
+              <NavLink to="/admin/products" className={linkStyles}>
+                <span>📦</span> Productos
+              </NavLink>
+              
+              {/* Enlace a Ordenes (Placeholder) */}
+              <NavLink to="/admin/orders" className={linkStyles}>
+                <span>🛒</span> Órdenes
+              </NavLink>
+            </nav>
+          </div>
 
-          sm:relative
-          sm:left-0
-        `}
-      >
-        <nav>
-          <ul
-            className='flex flex-col'
-          >
-            <li>
-              <NavLink
-                to='/admin/home'
-                className={getLinkStyles}
-              >Principal</NavLink>
-            </li>
-            <li>
-              <NavLink
-                to='/admin/products'
-                className={getLinkStyles}
-              >Productos</NavLink>
-            </li>
-            <li>
-              <NavLink
-                to='/admin/orders'
-                className={getLinkStyles}
-              >Ordenes</NavLink>
-            </li>
-          </ul>
-          <hr className='opacity-15 mt-4' />
-        </nav>
-        {renderLogoutButton(true)}
+          <div className="p-4 border-t">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition font-medium border border-red-100"
+            >
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+        </div>
       </aside>
-      <main
-        className="
-          p-5
-          overflow-y-scroll
-        "
-      >
-        <Outlet />
-      </main>
+
+      {/* === CONTENIDO PRINCIPAL === */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header móvil */}
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 sm:hidden">
+          <button 
+            className="p-2 text-gray-600 rounded-md hover:bg-gray-100"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            ☰
+          </button>
+          <span className="font-bold text-gray-700">Menú</span>
+        </header>
+
+        {/* AQUÍ SE CARGAN TU HOME Y TUS PRODUCTOS */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+          <Outlet />
+        </main>
+      </div>
+      
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black opacity-50 z-40 sm:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
     </div>
   );
 };
