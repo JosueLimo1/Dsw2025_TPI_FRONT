@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import Card from '../../shared/components/Card';
 import { getProducts } from '../services/list';
+// 1. IMPORTAMOS EL SERVICIO DE BORRAR
+import { deleteProduct } from '../services/delete';
 
 const productStatus = {
   ALL: 'all',
@@ -19,7 +21,6 @@ function ListProductsPage() {
   const [ pageSize, setPageSize ] = useState(10);
 
   const [ total, setTotal ] = useState(0);
-  // INICIALIZAMOS COMO ARRAY VACÍO SIEMPRE
   const [ products, setProducts ] = useState([]); 
 
   const [loading, setLoading] = useState(false);
@@ -31,26 +32,22 @@ function ListProductsPage() {
 
       if (error) throw error;
 
-      // --- CORRECCIÓN CLAVE AQUÍ ---
-      // Verificamos si 'data' es un array directo (Backend actual)
       if (Array.isArray(data)) {
           setProducts(data);
           setTotal(data.length);
       } 
-      // O si viene paginado como esperabas antes
       else if (data && data.productItems) {
           setProducts(data.productItems);
           setTotal(data.total);
       } 
       else {
-          // Si no llega nada, array vacío para que no explote el .map
           setProducts([]);
           setTotal(0);
       }
 
     } catch (error) {
       console.error(error);
-      setProducts([]); // En caso de error, limpiamos para evitar pantalla blanca
+      setProducts([]); 
     } finally {
       setLoading(false);
     }
@@ -60,7 +57,23 @@ function ListProductsPage() {
     fetchProducts();
   }, [status, pageSize, pageNumber]);
 
-  const totalPages = Math.ceil(total / pageSize) || 1; // Evitar división por cero
+  // 2. FUNCIÓN PARA ELIMINAR
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`¿Estás seguro de eliminar el producto "${name}"?`)) {
+        try {
+            setLoading(true); // Mostramos loading mientras borra
+            await deleteProduct(id);
+            // Recargamos la lista
+            await fetchProducts();
+        } catch (error) {
+            console.error(error);
+            alert("Error al eliminar el producto.");
+            setLoading(false);
+        }
+    }
+  };
+
+  const totalPages = Math.ceil(total / pageSize) || 1; 
 
   const handleSearch = async () => {
     await fetchProducts();
@@ -72,12 +85,10 @@ function ListProductsPage() {
         <div className='flex justify-between items-center mb-3'>
           <h1 className='text-3xl'>Productos</h1>
           
-          {/* Botón Mobile */}
           <Button className='h-11 w-11 rounded-2xl sm:hidden'>
-            +
+             +
           </Button>
 
-          {/* Botón Desktop */}
           <Button
             className='hidden sm:block'
             onClick={() => navigate('/admin/products/create')}
@@ -87,7 +98,7 @@ function ListProductsPage() {
         </div>
 
         <div className='flex flex-col sm:flex-row gap-4'>
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-3 w-full'>
             <input 
                 value={searchTerm} 
                 onChange={(evt) => setSearchTerm(evt.target.value)} 
@@ -113,22 +124,43 @@ function ListProductsPage() {
       <div className='mt-4 flex flex-col gap-4'>
         {
           loading ? (
-            <span>Buscando datos...</span>
+            <div className="text-center p-4">Cargando datos...</div>
           ) : (
-            // PROTECCIÓN EXTRA: products?.map
             products?.length > 0 ? (
                 products.map(product => (
                 <Card key={product.sku || product.id}>
-                    <h1>{product.sku} - {product.name}</h1>
-                    <p className='text-base'>
-                        Stock: {product.stockQuantity} - 
-                        Price: ${product.currentUnitPrice} - 
-                        {product.isActive ? 'Activado' : 'Desactivado'}
-                    </p>
+                    {/* 3. DISEÑO ACTUALIZADO DE LA FILA */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        
+                        {/* Datos del producto */}
+                        <div>
+                            <h1 className="font-bold text-xl">{product.name} <span className="text-sm text-gray-500 font-normal">({product.sku})</span></h1>
+                            <p className='text-base mt-1'>
+                                Stock: <b>{product.stockQuantity}</b> | 
+                                Precio: <b>${product.currentUnitPrice}</b> | 
+                                <span className={`ml-1 ${product.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                    {product.isActive ? 'Activado' : 'Desactivado'}
+                                </span>
+                            </p>
+                        </div>
+
+                        {/* Botones de Acción */}
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm w-full sm:w-auto">
+                                ✏️ Editar
+                            </Button>
+                            <Button 
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm w-full sm:w-auto"
+                                onClick={() => handleDelete(product.id, product.name)}
+                            >
+                                🗑️ Eliminar
+                            </Button>
+                        </div>
+                    </div>
                 </Card>
                 ))
             ) : (
-                <p>No se encontraron productos.</p>
+                <p className="text-center p-4">No se encontraron productos.</p>
             )
           )
         }
