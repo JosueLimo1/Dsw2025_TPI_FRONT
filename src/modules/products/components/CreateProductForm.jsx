@@ -1,11 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import Button from '../../shared/components/Button';
 import Card from '../../shared/components/Card';
 import Input from '../../shared/components/Input';
 import { createProduct } from '../services/create';
-import { useState } from 'react';
-import { frontendErrorMessage } from '../helpers/backendError';
 
 function CreateProductForm() {
   const {
@@ -15,7 +14,7 @@ function CreateProductForm() {
   } = useForm({
     defaultValues: {
       sku: '',
-      cui: '',
+      cui: '', // Esto irá a internalCode
       name: '',
       description: '',
       price: 0,
@@ -24,87 +23,101 @@ function CreateProductForm() {
   });
 
   const [errorBackendMessage, setErrorBackendMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const onValid = async (formData) => {
     try {
+      setIsSubmitting(true);
+      setErrorBackendMessage('');
+      
       await createProduct(formData);
 
+      // Si todo sale bien, volvemos a la lista
       navigate('/admin/products');
     } catch (error) {
-      if (error.response?.data?.detail) {
-        const errorMessage = frontendErrorMessage[error.response.data.code];
-
-        setErrorBackendMessage(errorMessage);
-      } else {
-        setErrorBackendMessage('Contactar a Soporte');
-      }
+      console.error(error);
+      // Manejo de errores genérico por si no tienes el helper 'frontendErrorMessage'
+      const msg = error.response?.data?.message || error.response?.data || 'Error al crear el producto.';
+      setErrorBackendMessage(typeof msg === 'string' ? msg : 'Error desconocido en el servidor.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Card>
-      <form
-        className='
-          flex
-          flex-col
-          gap-20
-          p-8
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Crear Nuevo Producto</h2>
+      </div>
 
-          sm:gap-4
-        '
+      <form
+        className='flex flex-col gap-4'
         onSubmit={handleSubmit(onValid)}
       >
-        <Input
-          label='SKU'
-          error={errors.sku?.message}
-          {...register('sku', {
-            required: 'SKU es requerido',
-          })}
-        />
-        <Input
-          label='Código Único'
-          error={errors.cui?.message}
-          {...register('cui', {
-            required: 'Código Único es requerido',
-          })}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label='SKU'
+              error={errors.sku?.message}
+              {...register('sku', { required: 'SKU es requerido' })}
+            />
+            <Input
+              label='Código Único (CUI)'
+              error={errors.cui?.message}
+              {...register('cui', { required: 'Código Único es requerido' })}
+            />
+        </div>
+
         <Input
           label='Nombre'
           error={errors.name?.message}
-          {...register('name', {
-            required: 'Nombre es requerido',
-          })}
+          {...register('name', { required: 'Nombre es requerido' })}
         />
+        
         <Input
           label='Descripción'
           {...register('description')}
         />
-        <Input
-          label='Precio'
-          error={errors.price?.message}
-          type='number'
-          {...register('price', {
-            min: {
-              value: 0,
-              message: 'No puede tener un precio negativo',
-            },
-          })}
-        />
-        <Input
-          label='Stock'
-          error={errors.stock?.message}
-          {...register('stock', {
-            min: {
-              value: 0,
-              message: 'No puede tener un stock negativo',
-            },
-          })}
-        />
-        <div className='sm:text-end'>
-          <Button type='submit' className='w-full sm:w-fit'>Crear Producto</Button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label='Precio ($)'
+              error={errors.price?.message}
+              type='number'
+              {...register('price', {
+                required: 'Requerido',
+                min: { value: 0, message: 'No puede ser negativo' },
+              })}
+            />
+            <Input
+              label='Stock'
+              error={errors.stock?.message}
+              type='number'
+              {...register('stock', {
+                required: 'Requerido',
+                min: { value: 0, message: 'No puede ser negativo' },
+              })}
+            />
         </div>
-        {errorBackendMessage && <span className='text-red-500'>{errorBackendMessage}</span>}
+
+        {errorBackendMessage && (
+            <div className="p-3 bg-red-100 text-red-700 rounded text-center font-bold">
+                {errorBackendMessage}
+            </div>
+        )}
+
+        <div className='flex justify-end gap-3 mt-4'>
+          <Button 
+            type='button' 
+            className='bg-gray-400 hover:bg-gray-500'
+            onClick={() => navigate('/admin/products')}
+          >
+            Cancelar
+          </Button>
+          <Button type='submit' disabled={isSubmitting}>
+            {isSubmitting ? 'Guardando...' : 'Crear Producto'}
+          </Button>
+        </div>
       </form>
     </Card>
   );
