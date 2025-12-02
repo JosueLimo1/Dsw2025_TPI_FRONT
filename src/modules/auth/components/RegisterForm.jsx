@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+// Importamos los servicios
 import { registerPublic, registerByAdmin } from '../services/register';
 
 const RegisterForm = ({ isAdminMode = false }) => {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  // 1. AGREGAMOS 'reset' AQUÍ
+  const { register, handleSubmit, watch, formState: { errors }, reset } = useForm();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -14,6 +16,7 @@ const RegisterForm = ({ isAdminMode = false }) => {
     try {
       setIsLoading(true);
       setServerError('');
+      setSuccessMsg(''); // Limpiamos mensaje previo
       
       const dto = {
         Username: data.username,
@@ -25,15 +28,21 @@ const RegisterForm = ({ isAdminMode = false }) => {
       };
 
       if (isAdminMode) {
-        // Modo Admin
+        // --- MODO ADMIN (DENTRO DEL DASHBOARD) ---
         await registerByAdmin(dto);
-        setSuccessMsg(`¡Usuario ${dto.Role} creado! Volviendo al inicio...`);
-        // CAMBIO 1: Redirección automática también para Admin
-        setTimeout(() => navigate('/login'), 2500); 
+        
+        // CORRECCIÓN:
+        // 1. Mensaje de éxito
+        setSuccessMsg(`¡Usuario creado correctamente! Puede registrar otro.`);
+        // 2. Limpiamos el formulario para que quede listo para el siguiente
+        reset(); 
+        // 3. ¡NO REDIRIGIMOS! Nos quedamos aquí.
+        
       } else {
-        // Modo Público
+        // --- MODO PÚBLICO (DESDE EL LOGIN) ---
         await registerPublic(dto);
-        setSuccessMsg('¡Registro exitoso! Redirigiendo...');
+        setSuccessMsg('¡Registro exitoso! Redirigiendo al login...');
+        // Aquí sí redirigimos porque el usuario acaba de registrarse
         setTimeout(() => navigate('/login'), 2000);
       }
       
@@ -47,7 +56,7 @@ const RegisterForm = ({ isAdminMode = false }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md w-96 max-h-[90vh] overflow-y-auto">
+    <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
         {isAdminMode ? 'Gestión de Usuarios' : 'Crear Cuenta'}
       </h2>
@@ -86,7 +95,7 @@ const RegisterForm = ({ isAdminMode = false }) => {
 
         {/* Nombre */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre</label>
+          <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
           <input type="text" {...register("name", { required: "Requerido" })} className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"/>
           {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
         </div>
@@ -105,7 +114,7 @@ const RegisterForm = ({ isAdminMode = false }) => {
           {errors.password && <span className="text-xs text-red-500">{errors.password.message}</span>}
         </div>
 
-        {/* Confirmar Contraseña (CAMBIO 2: Etiqueta corregida) */}
+        {/* Confirmar Contraseña */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
           <input type="password" {...register("confirmPassword", { required: "Requerida", validate: (val) => watch('password') === val || "No coinciden" })} className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"/>
@@ -122,13 +131,13 @@ const RegisterForm = ({ isAdminMode = false }) => {
             {isLoading ? 'Procesando...' : (isAdminMode ? 'Crear Usuario' : 'Registrarme')}
           </button>
           
-          {/* CAMBIO 3: Botón Volver visible siempre (para Admin y Usuario) */}
+          {/* Botón Volver */}
           <button 
             type="button" 
             onClick={() => navigate('/login')}
             className="w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded hover:bg-gray-300 transition duration-200"
           >
-            {isAdminMode ? 'Volver al Inicio de Sesión' : 'Volver al Login'}
+            {isAdminMode ? 'Volver' : 'Volver al Login'}
           </button>
         </div>
       </form>

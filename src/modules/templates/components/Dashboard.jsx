@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-// CORRECCIÓN: Quitamos el "modules" que sobraba porque ya estás adentro
-import useAuth from '../../auth/hook/useAuth';
+import useAuth from '../../auth/hook/useAuth'; // Verifica que esta ruta a tu hook sea correcta
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -23,7 +22,7 @@ const Dashboard = () => {
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
       
-      {/* === SIDEBAR === */}
+      {/* SIDEBAR */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out 
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:relative sm:translate-x-0`}
@@ -35,17 +34,19 @@ const Dashboard = () => {
             </div>
 
             <nav className="flex-1 px-4 py-6 space-y-2">
-              {/* Enlace al Home */}
               <NavLink to="/admin" end className={linkStyles}>
                 <span></span> Principal
               </NavLink>
               
-              {/* Enlace a tus Productos */}
               <NavLink to="/admin/products" className={linkStyles}>
                 <span></span> Productos
               </NavLink>
+
+              {/* --- NUEVO ENLACE: REGISTRAR USUARIO --- */}
+              <NavLink to="/admin/users/create" className={linkStyles}>
+                <span></span> Registrar Usuario
+              </NavLink>
               
-              {/* Enlace a Ordenes (Placeholder) */}
               <NavLink to="/admin/orders" className={linkStyles}>
                 <span></span> Órdenes
               </NavLink>
@@ -57,15 +58,14 @@ const Dashboard = () => {
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition font-medium border border-red-100"
             >
-              Cerrar Sesión
+               Cerrar Sesión
             </button>
           </div>
         </div>
       </aside>
 
-      {/* === CONTENIDO PRINCIPAL === */}
+      {/* CONTENIDO PRINCIPAL */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header móvil */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 sm:hidden">
           <button 
             className="p-2 text-gray-600 rounded-md hover:bg-gray-100"
@@ -76,7 +76,7 @@ const Dashboard = () => {
           <span className="font-bold text-gray-700">Menú</span>
         </header>
 
-        {/* AQUÍ SE CARGAN TU HOME Y TUS PRODUCTOS */}
+        {/* AQUÍ SE CARGARÁ EL FORMULARIO DE REGISTRO */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
           <Outlet />
         </main>

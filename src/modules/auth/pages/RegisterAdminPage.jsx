@@ -6,29 +6,25 @@ import useAuth from '../hook/useAuth';
 
 const RegisterAdminPage = () => {
   const navigate = useNavigate();
-  const { logoutSession } = useAuth();
-
-  const handleBack = () => {
-    logoutSession(); 
-    navigate('/login');
-  };
+  // Esta función puede usarse si decides poner un botón de salir en el futuro
+  const { logoutSession } = useAuth(); 
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="w-full max-w-md relative">
-        
-        {/* Botón para salir (arriba a la derecha) */}
-        <button 
-            onClick={handleBack}
-            className="absolute -top-10 right-0 text-sm text-gray-500 hover:text-red-600 font-medium"
-        >
-            Cerrar Sesión Admin
-        </button>
-
-        {/* Cargamos el formulario activando el modo Admin */}
-        <RegisterForm isAdminMode={true} />
-        
+    // Contenedor principal con padding para que no se pegue a los bordes
+    <div className="p-6 w-full max-w-4xl mx-auto">
+      
+      {/* Encabezado de la página */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
+        <p className="text-gray-500 text-sm mt-1">
+            Complete el formulario para registrar un nuevo administrador o usuario del sistema.
+        </p>
       </div>
+
+      {/* Cargamos el formulario activando el modo Admin */}
+      {/* El formulario ya tiene sus propios estilos de tarjeta (Card), así que se verá integrado */}
+      <RegisterForm isAdminMode={true} />
+        
     </div>
   );
 };

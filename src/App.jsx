@@ -4,13 +4,9 @@ import RegisterPage from './modules/auth/pages/RegisterPage.jsx';
 import RegisterAdminPage from './modules/auth/pages/RegisterAdminPage.jsx';
 import { AuthProvider } from './modules/auth/context/AuthProvider';
 
-// IMPORTACIONES DEL DASHBOARD
-// CORRECCIÓN: Agregamos 'modules' a la ruta
 import Dashboard from './modules/templates/components/Dashboard.jsx';
 import Home from './modules/home/pages/Home.jsx';
 import ListProductsPage from './modules/products/pages/ListProductsPage.jsx';
-
-// IMPORTAR LA PÁGINA DEL FORMULARIO (Sirve para Crear y Editar)
 import CreateProductPage from './modules/products/pages/CreateProductPage.jsx';
 
 function App() {
@@ -22,24 +18,23 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<RegisterPage />} />
         
-        {/* Ruta para crear Admin (Fuera del dashboard) */}
-        <Route path="/admin/users/create" element={<RegisterAdminPage />} />
+        {/* --- RUTA 1: INDEPENDIENTE (Para acceder desde el Login) --- */}
+        {/* Esta ruta NO tiene el Dashboard alrededor, por lo que se verá pantalla completa */}
+        <Route path="/admin/register-standalone" element={<RegisterAdminPage />} />
         
-        {/* RUTAS DEL DASHBOARD */}
+        {/* --- RUTAS DEL DASHBOARD (Para acceder desde el Menú) --- */}
         <Route path="/admin" element={<Dashboard />}>
             
-            {/* Inicio del Dashboard */}
             <Route index element={<Home />} />
             
-            {/* Lista de productos */}
+            {/* Gestión de Productos */}
             <Route path="products" element={<ListProductsPage />} />
-            
-            {/* Ruta Crear Producto */}
             <Route path="products/create" element={<CreateProductPage />} />
-
-            {/* --- NUEVA RUTA PARA EDITAR --- */}
-            {/* El ':id' captura el ID que envía el botón de la lista */}
             <Route path="products/edit/:id" element={<CreateProductPage />} />
+            
+            {/* --- RUTA 2: INTEGRADA (Para acceder desde el Menú Lateral) --- */}
+            {/* Esta ruta SÍ tiene el Dashboard alrededor */}
+            <Route path="users/create" element={<RegisterAdminPage />} />
             
             <Route path="orders" element={<h2>Gestión de Órdenes (Próximamente)</h2>} />
         </Route>
