@@ -3,11 +3,12 @@ import LoginPage from './modules/auth/pages/LoginPage';
 import RegisterPage from './modules/auth/pages/RegisterPage.jsx';
 import RegisterAdminPage from './modules/auth/pages/RegisterAdminPage.jsx';
 import { AuthProvider } from './modules/auth/context/AuthProvider';
-
 import Dashboard from './modules/templates/components/Dashboard.jsx';
 import Home from './modules/home/pages/Home.jsx';
 import ListProductsPage from './modules/products/pages/ListProductsPage.jsx';
 import CreateProductPage from './modules/products/pages/CreateProductPage.jsx';
+import ListOrdersPage from './modules/orders/pages/ListOrdersPage.jsx';
+import OrderDetailPage from './modules/orders/pages/OrderDetailPage.jsx'; // <--- IMPORTAR
 
 function App() {
   return (
@@ -36,7 +37,12 @@ function App() {
             {/* Esta ruta SÍ tiene el Dashboard alrededor */}
             <Route path="users/create" element={<RegisterAdminPage />} />
             
-            <Route path="orders" element={<h2>Gestión de Órdenes (Próximamente)</h2>} />
+            {/* Gestión de Órdenes (CONECTADO) */}
+            <Route path="orders" element={<ListOrdersPage />} />
+
+            {/* NUEVA RUTA */}
+            <Route path="orders/:id" element={<OrderDetailPage />} />
+       
         </Route>
       </Routes>
     </AuthProvider>
