@@ -37,17 +37,17 @@ const Dashboard = () => {
             <nav className="flex-1 px-4 py-6 space-y-2">
               {/* Enlace al Home */}
               <NavLink to="/admin" end className={linkStyles}>
-                <span>🏠</span> Principal
+                <span></span> Principal
               </NavLink>
               
               {/* Enlace a tus Productos */}
               <NavLink to="/admin/products" className={linkStyles}>
-                <span>📦</span> Productos
+                <span></span> Productos
               </NavLink>
               
               {/* Enlace a Ordenes (Placeholder) */}
               <NavLink to="/admin/orders" className={linkStyles}>
-                <span>🛒</span> Órdenes
+                <span></span> Órdenes
               </NavLink>
             </nav>
           </div>
@@ -57,7 +57,7 @@ const Dashboard = () => {
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition font-medium border border-red-100"
             >
-              🚪 Cerrar Sesión
+              Cerrar Sesión
             </button>
           </div>
         </div>
